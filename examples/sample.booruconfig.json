@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "servers": [
+    {
+      "id": "danbooru",
+      "name": "Danbooru",
+      "kind": "danbooru",
+      "baseUrl": "https://danbooru.donmai.us"
+    },
+    {
+      "id": "aibooru",
+      "name": "AIBooru",
+      "kind": "danbooru",
+      "baseUrl": "https://aibooru.online"
+    },
+    {
+      "id": "safebooru",
+      "name": "Safebooru",
+      "kind": "gelbooru",
+      "baseUrl": "https://safebooru.org"
+    },
+    {
+      "id": "gelbooru",
+      "name": "Gelbooru",
+      "kind": "gelbooru",
+      "baseUrl": "https://gelbooru.com"
+    },
+    {
+      "id": "rule34",
+      "name": "Rule 34",
+      "kind": "gelbooru",
+      "baseUrl": "https://rule34.xxx"
+    },
+    {
+      "id": "tbib",
+      "name": "TBIB",
+      "kind": "gelbooru",
+      "baseUrl": "https://tbib.org"
+    },
+    {
+      "id": "realbooru",
+      "name": "Realbooru",
+      "kind": "gelbooru",
+      "baseUrl": "https://realbooru.com"
+    },
+    {
+      "id": "hypnohub",
+      "name": "Hypnohub",
+      "kind": "gelbooru",
+      "baseUrl": "https://hypnohub.net"
+    },
+    {
+      "id": "e621",
+      "name": "e621",
+      "kind": "e621",
+      "baseUrl": "https://e621.net"
+    },
+    {
+      "id": "e926",
+      "name": "e926 (SFW)",
+      "kind": "e621",
+      "baseUrl": "https://e926.net"
+    },
+    {
+      "id": "konachan-net",
+      "name": "Konachan (SFW)",
+      "kind": "moebooru",
+      "baseUrl": "https://konachan.net"
+    },
+    {
+      "id": "konachan-com",
+      "name": "Konachan",
+      "kind": "moebooru",
+      "baseUrl": "https://konachan.com"
+    },
+    {
+      "id": "yandere",
+      "name": "yande.re",
+      "kind": "moebooru",
+      "baseUrl": "https://yande.re"
+    },
+    {
+      "id": "sakugabooru",
+      "name": "Sakugabooru",
+      "kind": "moebooru",
+      "baseUrl": "https://www.sakugabooru.com"
+    },
+    {
+      "id": "kemono",
+      "name": "Kemono",
+      "kind": "kemono",
+      "baseUrl": "https://kemono.su"
+    }
+  ],
+  "defaultServerId": "safebooru"
+}

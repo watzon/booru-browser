@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "booru-browser",
+    "name": "Booru Browser",
     "slug": "booru-browser",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -9,9 +9,14 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.watzon.boorubrowser",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
+      "package": "com.watzon.boorubrowser",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -38,7 +43,23 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Used to scan QR codes for importing server lists."
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Used to save downloaded images to your Photos library.",
+          "savePhotosPermission": "Used to save downloaded images to your Photos library.",
+          "isAccessMediaLocationEnabled": false
+        }
+      ],
+      "expo-video"
     ],
     "experiments": {
       "typedRoutes": true,

@@ -1,50 +1,50 @@
-# Welcome to your Expo app 👋
+# Booru Browser
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A modern, gallery-focused Expo app for browsing booru-style image sites. Supports Danbooru, Gelbooru, e621, Moebooru/Konachan, and Kemono via pluggable adapters.
 
-## Get started
+## Key features
 
-1. Install dependencies
+- **No bundled server list.** Add servers manually, import a `.booruconfig.json`, or scan a QR code.
+- **SFW by default.** Mature content is gated behind an age-confirmation toggle hidden under Settings → tap "Booru Browser v1.0.0" 7 times.
+- **Per-site authentication.** API keys are stored in the iOS Keychain via `expo-secure-store`, never in plain storage.
+- **Fast image grids.** Virtualized via `@shopify/flash-list`, with `expo-image` caching.
+- **Tag search with autocomplete** per-source.
+- **Local favorites + downloads to Photos.**
 
-   ```bash
-   npm install
-   ```
+## Development
 
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```sh
+pnpm install
+pnpm ios     # or pnpm android
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+The first build requires a development build (not Expo Go) because of `expo-camera`, `expo-media-library`, and `expo-secure-store`.
 
-## Learn more
+```sh
+pnpm exec eas build --profile development --platform ios
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+## Importing a server list
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+The app deep-links via `boorubrowser://`. Two payload styles are supported:
 
-## Join the community
+```
+boorubrowser://import?src=https://example.com/list.json
+boorubrowser://import?data=<base64-url-encoded JSON>
+```
 
-Join our community of developers creating universal apps.
+A sample list lives in [`examples/sample.booruconfig.json`](examples/sample.booruconfig.json).
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Architecture
+
+```
+sources/       Source adapter interface + per-family adapters
+servers/       User's server list (zustand + AsyncStorage) and auth (secure-store)
+gate/          NSFW age-gate (secure-store) and rating-filter enforcement
+favorites/     Locally-saved posts
+downloads/     File-system + share-sheet helpers
+components/    UI primitives (post grid, viewer, server form, tag search)
+app/           expo-router screens
+```
+
+The age gate is enforced through a single `applyRatingFilter` wrapper that every search query passes through — UI code cannot accidentally bypass it.

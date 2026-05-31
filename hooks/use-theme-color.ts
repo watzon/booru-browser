@@ -3,12 +3,12 @@
  * https://docs.expo.dev/guides/color-schemes/
  */
 
-import { Colors } from '@/constants/theme';
+import { Colors, type ColorToken } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export function useThemeColor(
   props: { light?: string; dark?: string },
-  colorName: keyof typeof Colors.light & keyof typeof Colors.dark
+  colorName: ColorToken,
 ) {
   const theme = useColorScheme() ?? 'light';
   const colorFromProps = props[theme];
@@ -18,4 +18,14 @@ export function useThemeColor(
   } else {
     return Colors[theme][colorName];
   }
+}
+
+/** Returns the full palette object for the active scheme. */
+export function useThemeColors() {
+  const theme = useColorScheme() ?? 'light';
+  return Colors[theme];
+}
+
+export function useThemeName() {
+  return useColorScheme() ?? 'light';
 }
