@@ -2,10 +2,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
-const MAX_RECENTS = 20;
+const MAX_RECENTS = 30;
 
-export type RecentSearch = {
-  tags: string[];
+// Recents are individual tags, most-recently-used first, per server. A search
+// for multiple tags records each tag separately so they can be recombined,
+// rather than pinning the whole phrase as one entry.
+export type RecentTag = {
+  tag: string;
   serverId: string;
   ts: number;
 };
@@ -18,7 +21,7 @@ export type SavedSearch = {
 };
 
 type State = {
-  recents: RecentSearch[];
+  recents: RecentTag[];
   saved: SavedSearch[];
 };
 
@@ -31,8 +34,7 @@ type Actions = {
   deleteSaved: (id: string) => void;
 };
 
-export const recentKey = (r: { serverId: string; tags: string[] }) =>
-  `${r.serverId}|${r.tags.slice().sort().join(' ')}`;
+export const recentTagKey = (r: { serverId: string; tag: string }) => `${r.serverId}|${r.tag}`;
 
 export const useSearchHistoryStore = create<State & Actions>()(
   persist(
@@ -40,20 +42,25 @@ export const useSearchHistoryStore = create<State & Actions>()(
       recents: [],
       saved: [],
 
+      // Records each tag of a search individually, newest first. Iterating in
+      // order and unshifting means the last tag of the search lands frontmost,
+      // so the most-recently-added tag is the most recent.
       pushRecent: (tags, serverId) =>
         set((state) => {
           const normalized = tags.map((t) => t.trim()).filter(Boolean);
           if (normalized.length === 0) return state;
-          const entry: RecentSearch = { tags: normalized, serverId, ts: Date.now() };
-          const key = recentKey(entry);
-          const filtered = state.recents.filter((r) => recentKey(r) !== key);
-          const next = [entry, ...filtered].slice(0, MAX_RECENTS);
-          return { recents: next };
+          const now = Date.now();
+          let recents = state.recents;
+          for (const tag of normalized) {
+            const key = recentTagKey({ serverId, tag });
+            recents = [{ tag, serverId, ts: now }, ...recents.filter((r) => recentTagKey(r) !== key)];
+          }
+          return { recents: recents.slice(0, MAX_RECENTS) };
         }),
 
       removeRecent: (key) =>
         set((state) => ({
-          recents: state.recents.filter((r) => recentKey(r) !== key),
+          recents: state.recents.filter((r) => recentTagKey(r) !== key),
         })),
 
       clearRecents: () => set({ recents: [] }),
@@ -80,7 +87,26 @@ export const useSearchHistoryStore = create<State & Actions>()(
     {
       name: 'booru-browser:search-history',
       storage: createJSONStorage(() => AsyncStorage),
-      version: 1,
+      version: 2,
+      // v1 stored recents as whole searches ({ tags: string[] }). Flatten them
+      // into individual tags, newest-first, deduped per server.
+      migrate: (persisted, version) => {
+        const state = persisted as State & { recents?: unknown };
+        if (version < 2 && Array.isArray(state?.recents)) {
+          const flat: RecentTag[] = [];
+          const seen = new Set<string>();
+          for (const entry of state.recents as { tags?: string[]; serverId: string; ts?: number }[]) {
+            for (const tag of entry.tags ?? []) {
+              const key = `${entry.serverId}|${tag}`;
+              if (!tag || seen.has(key)) continue;
+              seen.add(key);
+              flat.push({ tag, serverId: entry.serverId, ts: entry.ts ?? 0 });
+            }
+          }
+          state.recents = flat.slice(0, MAX_RECENTS);
+        }
+        return state as State;
+      },
     },
   ),
 );

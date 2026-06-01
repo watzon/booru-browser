@@ -29,7 +29,7 @@ import { Chip } from '@/components/ui/chip';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { BrandGradient, FontSize, Radius, Spacing } from '@/constants/theme';
 import { Strings } from '@/constants/strings';
-import { recentKey, useSearchHistoryStore, type RecentSearch } from '@/hooks/use-search-history';
+import { recentTagKey, useSearchHistoryStore } from '@/hooks/use-search-history';
 import { useSearchStore } from '@/hooks/use-search-store';
 import { useReduceMotion } from '@/hooks/use-reduce-motion';
 import { SHEET_MAX_WIDTH, useResponsive } from '@/hooks/use-responsive';
@@ -64,7 +64,6 @@ export function SearchSheet({ open, onClose }: { open: boolean; onClose: () => v
   const addTag = useSearchStore((s) => s.addTag);
   const removeTag = useSearchStore((s) => s.removeTag);
   const clearTags = useSearchStore((s) => s.clear);
-  const setTags = useSearchStore((s) => s.setTags);
 
   const recents = useSearchHistoryStore((s) => s.recents);
   const removeRecent = useSearchHistoryStore((s) => s.removeRecent);
@@ -100,8 +99,9 @@ export function SearchSheet({ open, onClose }: { open: boolean; onClose: () => v
   });
   const suggestions: TagSuggestion[] = value.trim() ? autocomplete.data ?? [] : [];
 
+  // Recent tags for this board, excluding ones already in the active search.
   const serverRecents = active
-    ? recents.filter((r) => r.serverId === active.id).slice(0, 12)
+    ? recents.filter((r) => r.serverId === active.id && !tags.includes(r.tag)).slice(0, 12)
     : [];
 
   const sheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: translateY.value }] }));
@@ -127,10 +127,11 @@ export function SearchSheet({ open, onClose }: { open: boolean; onClose: () => v
     setValue('');
   };
 
-  const applyRecent = (r: RecentSearch) => {
+  // Tapping a recent tag adds it to the current search (and keeps the sheet
+  // open to compose), matching how autocomplete and the field behave.
+  const applyRecentTag = (tag: string) => {
     buzz();
-    setTags(r.tags);
-    onClose();
+    addTag(tag);
   };
 
   const go = (href: '/server/new' | '/servers') => {
@@ -237,11 +238,11 @@ export function SearchSheet({ open, onClose }: { open: boolean; onClose: () => v
                   <View style={styles.wrap}>
                     {serverRecents.map((r) => (
                       <Chip
-                        key={recentKey(r)}
-                        label={r.tags.join(' ')}
+                        key={recentTagKey(r)}
+                        label={r.tag}
                         mode="selectable"
-                        onPress={() => applyRecent(r)}
-                        onLongPress={() => removeRecent(recentKey(r))}
+                        onPress={() => applyRecentTag(r.tag)}
+                        onLongPress={() => removeRecent(recentTagKey(r))}
                         accessibilityHint="Long-press to remove"
                       />
                     ))}

@@ -20,9 +20,9 @@ import { useToast } from '@/components/ui/toast';
 import { FontSize, Spacing } from '@/constants/theme';
 import { Strings } from '@/constants/strings';
 import {
-  recentKey,
+  recentTagKey,
   useSearchHistoryStore,
-  type RecentSearch,
+  type RecentTag,
   type SavedSearch,
 } from '@/hooks/use-search-history';
 import { useSearchStore } from '@/hooks/use-search-store';
@@ -59,14 +59,13 @@ export default function SearchScreen() {
     );
   }
 
-  const serverRecents = recents.filter((r) => r.serverId === server.id).slice(0, 12);
+  const serverRecents = recents
+    .filter((r) => r.serverId === server.id && !tags.includes(r.tag))
+    .slice(0, 12);
   const serverSaved = saved.filter((s) => !s.serverId || s.serverId === server.id);
 
-  const applyRecent = (r: RecentSearch) => {
-    setTags(r.tags);
-    toast.success('Applied');
-    router.back();
-  };
+  // Recent tags compose into the current search rather than replacing it.
+  const applyRecentTag = (tag: string) => addTag(tag);
 
   const applySaved = (s: SavedSearch) => {
     setTags(s.tags);
@@ -91,13 +90,13 @@ export default function SearchScreen() {
     }
   };
 
-  const handleRemoveRecent = async (r: RecentSearch) => {
+  const handleRemoveRecent = async (r: RecentTag) => {
     const ok = await confirm({
       title: 'Remove recent?',
       confirmLabel: 'Remove',
       destructive: true,
     });
-    if (ok) removeRecent(recentKey(r));
+    if (ok) removeRecent(recentTagKey(r));
   };
 
   const handleDeleteSaved = async (s: SavedSearch) => {
@@ -207,10 +206,10 @@ export default function SearchScreen() {
               <View style={styles.chipsWrap}>
                 {serverRecents.map((r) => (
                   <Chip
-                    key={recentKey(r)}
-                    label={r.tags.join(' ')}
+                    key={recentTagKey(r)}
+                    label={r.tag}
                     mode="selectable"
-                    onPress={() => applyRecent(r)}
+                    onPress={() => applyRecentTag(r.tag)}
                     onLongPress={() => handleRemoveRecent(r)}
                     accessibilityHint="Long-press to remove"
                   />
