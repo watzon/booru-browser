@@ -44,11 +44,18 @@
           }
         }
       ],
-      "expo-secure-store",
+      [
+        "expo-secure-store",
+        {
+          "faceIDPermission": false
+        }
+      ],
       [
         "expo-camera",
         {
-          "cameraPermission": "Used to scan QR codes for importing server lists."
+          "cameraPermission": "Used to scan QR codes for importing server lists.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false
         }
       ],
       [
@@ -56,7 +63,8 @@
         {
           "photosPermission": "Used to save downloaded images to your Photos library.",
           "savePhotosPermission": "Used to save downloaded images to your Photos library.",
-          "isAccessMediaLocationEnabled": false
+          "isAccessMediaLocationEnabled": false,
+          "granularPermissions": ["photo", "video"]
         }
       ],
       "expo-video"
@@ -64,6 +72,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "dc422ab6-dffd-4492-b248-1c40a3c2db2c"
+      }
+    },
+    "owner": "watzon-tech"
   }
 }
