@@ -24,7 +24,7 @@ import { useThemeColors } from '@/hooks/use-theme-color';
 import { useServerStore } from '@/servers/store';
 
 const APP_VERSION = Constants.expoConfig?.version ?? '1.0.0';
-const PRIVACY_URL = 'https://watzon.tech/booru-browser';
+const PRIVACY_URL = 'https://watzon.tech/booru-browser/privacy';
 const TERMS_URL = 'https://watzon.tech/booru-browser/terms';
 const SUPPORT_EMAIL = 'support@watzon.tech';
 
