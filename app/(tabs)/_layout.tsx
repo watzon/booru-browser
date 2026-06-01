@@ -15,6 +15,9 @@ export default function TabLayout() {
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarStyle: { display: 'none' },
+        // Slide-and-fade between tabs so the swipe gesture (components/
+        // tab-swipe.tsx) reads as moving sideways rather than a hard cut.
+        animation: 'shift',
       }}>
       <Tabs.Screen
         name="index"

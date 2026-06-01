@@ -10,6 +10,7 @@ import { Alert, Linking, ScrollView, StyleSheet, Switch, Text, View } from 'reac
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/button';
+import { TabSwipe } from '@/components/tab-swipe';
 import { Card } from '@/components/ui/card';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { ListRow } from '@/components/ui/list-row';
@@ -116,6 +117,7 @@ export default function SettingsScreen() {
   };
 
   return (
+    <TabSwipe>
     <SafeAreaView style={{ flex: 1 }} edges={['top']}>
       <ScrollView contentContainerStyle={{ padding: Spacing.lg, paddingBottom: 130 }}>
         <WideContainer style={{ gap: Spacing.xxl }}>
@@ -234,6 +236,7 @@ export default function SettingsScreen() {
         </WideContainer>
       </ScrollView>
     </SafeAreaView>
+    </TabSwipe>
   );
 }
 

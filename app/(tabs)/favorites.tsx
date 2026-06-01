@@ -4,6 +4,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PostGrid } from '@/components/post-grid';
+import { TabSwipe } from '@/components/tab-swipe';
 import { Chip } from '@/components/ui/chip';
 import { FontSize, Spacing } from '@/constants/theme';
 import { Strings } from '@/constants/strings';
@@ -48,6 +49,7 @@ export default function FavoritesScreen() {
   );
 
   return (
+    <TabSwipe>
     <SafeAreaView style={{ flex: 1 }} edges={['top']}>
       <View style={styles.header}>
         <Text
@@ -98,6 +100,7 @@ export default function FavoritesScreen() {
         emptyMessage={`${Strings.FAVORITES_EMPTY_TITLE} — ${Strings.FAVORITES_EMPTY_BODY}`}
       />
     </SafeAreaView>
+    </TabSwipe>
   );
 }
 

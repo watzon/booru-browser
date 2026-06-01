@@ -17,6 +17,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { PostDetail } from '@/components/post-detail';
 import { PostGrid } from '@/components/post-grid';
+import { TabSwipe } from '@/components/tab-swipe';
 import { Button } from '@/components/ui/button';
 import { Chip } from '@/components/ui/chip';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -371,7 +372,7 @@ export default function BrowseScreen() {
     );
   }
 
-  return browse;
+  return <TabSwipe>{browse}</TabSwipe>;
 }
 
 const styles = StyleSheet.create({
