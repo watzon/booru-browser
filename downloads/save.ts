@@ -29,8 +29,21 @@ function extensionFromUrl(url: string): string | undefined {
 // Cancellable download with progress. Resolves with the local URI of the
 // downloaded file. Reject reason is the literal string 'canceled' when the
 // caller cancels, so the UI can swallow that case quietly.
+// Downloads land in a dedicated cache subdirectory so Settings can measure and
+// clear them in isolation. It lives under cacheDirectory (OS-evictable) because
+// a "download" is transient — it's immediately saved to Photos or handed to the
+// share sheet, so we don't want it counting against persistent app storage.
+export function downloadsDir(): string | null {
+  return FileSystem.cacheDirectory ? `${FileSystem.cacheDirectory}downloads/` : null;
+}
+
+async function ensureDir(dir: string): Promise<void> {
+  const info = await FileSystem.getInfoAsync(dir);
+  if (!info.exists) await FileSystem.makeDirectoryAsync(dir, { intermediates: true });
+}
+
 export function startDownload(post: Post, opts: DownloadOptions = {}): DownloadController {
-  const dir = FileSystem.cacheDirectory;
+  const dir = downloadsDir();
   if (!dir) throw new Error('No cache directory available');
   const target = `${dir}${filenameFor(post)}`;
 
@@ -48,6 +61,7 @@ export function startDownload(post: Post, opts: DownloadOptions = {}): DownloadC
   let canceled = false;
 
   const promise = (async () => {
+    await ensureDir(dir);
     const result = await resumable.downloadAsync();
     if (!result || canceled) throw new Error('canceled');
     if (result.status < 200 || result.status >= 300) {

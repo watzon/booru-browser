@@ -58,6 +58,12 @@
         }
       ],
       [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Confirm it's you before enabling mature content."
+        }
+      ],
+      [
         "expo-camera",
         {
           "cameraPermission": "Used to scan QR codes for importing server lists.",

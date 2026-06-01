@@ -1,10 +1,12 @@
 import Constants from 'expo-constants';
 import { Image as ExpoImage } from 'expo-image';
 import * as FileSystem from 'expo-file-system/legacy';
+import * as LocalAuthentication from 'expo-local-authentication';
 import { useRouter } from 'expo-router';
+import * as StoreReview from 'expo-store-review';
 import * as WebBrowser from 'expo-web-browser';
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { Alert, Linking, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/button';
@@ -15,12 +17,15 @@ import { useToast } from '@/components/ui/toast';
 import { WideContainer } from '@/components/ui/wide-container';
 import { FontSize, Spacing } from '@/constants/theme';
 import { Strings } from '@/constants/strings';
+import { downloadsDir } from '@/downloads/save';
 import { useGateStore } from '@/gate/store';
 import { useThemeColors } from '@/hooks/use-theme-color';
 import { useServerStore } from '@/servers/store';
 
 const APP_VERSION = Constants.expoConfig?.version ?? '1.0.0';
 const PRIVACY_URL = 'https://watzon.tech/booru-browser';
+const TERMS_URL = 'https://watzon.tech/booru-browser/terms';
+const SUPPORT_EMAIL = 'support@watzon.tech';
 
 export default function SettingsScreen() {
   const c = useThemeColors();
@@ -29,25 +34,35 @@ export default function SettingsScreen() {
   const serverCount = useServerStore((s) => s.servers.length);
 
   const { unlocked, unlock, lock } = useGateStore();
-  const [cacheSizes, setCacheSizes] = useState<{ images: number; downloads: number }>({
-    images: 0,
-    downloads: 0,
-  });
+  const [downloadsSize, setDownloadsSize] = useState(0);
   const [refreshingSizes, setRefreshingSizes] = useState(false);
 
   const refreshSizes = useCallback(async () => {
     setRefreshingSizes(true);
-    const [images, downloads] = await Promise.all([
-      measureImageCache(),
-      measureDownloads(),
-    ]);
-    setCacheSizes({ images, downloads });
+    setDownloadsSize(await measureDownloads());
     setRefreshingSizes(false);
   }, []);
 
   useEffect(() => {
     refreshSizes();
   }, [refreshSizes]);
+
+  // Enabling mature content requires an 18+ confirmation followed by a device
+  // biometric/passcode check, so someone who isn't the owner can't flip it on.
+  // If the device has no enrolled authentication we fall back to the
+  // confirmation alone rather than locking the owner out.
+  const confirmUnlock = async () => {
+    const canAuth =
+      (await LocalAuthentication.hasHardwareAsync()) &&
+      (await LocalAuthentication.isEnrolledAsync());
+    if (canAuth) {
+      const res = await LocalAuthentication.authenticateAsync({
+        promptMessage: "Confirm it's you to enable mature content",
+      });
+      if (!res.success) return;
+    }
+    unlock();
+  };
 
   const onToggleGate = (value: boolean) => {
     if (value && !unlocked) {
@@ -56,13 +71,27 @@ export default function SettingsScreen() {
         'By continuing you confirm you are 18 or older and acknowledge that some sources may contain explicit material. Posts will still be filtered by your search tags.',
         [
           { text: 'Cancel', style: 'cancel' },
-          { text: 'I am 18+', style: 'destructive', onPress: () => unlock() },
+          { text: 'I am 18+', style: 'destructive', onPress: () => confirmUnlock() },
         ],
       );
       return;
     }
     if (!value && unlocked) lock();
   };
+
+  const handleRate = async () => {
+    if (await StoreReview.isAvailableAsync()) {
+      await StoreReview.requestReview();
+    } else {
+      toast.error('Rating is unavailable on this device.');
+    }
+  };
+
+  const openUrl = (url: string) => WebBrowser.openBrowserAsync(url).catch(() => {});
+  const openSupport = () =>
+    Linking.openURL(
+      `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(`Booru Browser ${APP_VERSION} support`)}`,
+    ).catch(() => toast.error('No mail app configured.'));
 
   const handleClearImageCache = async () => {
     await ExpoImage.clearDiskCache();
@@ -138,16 +167,30 @@ export default function SettingsScreen() {
               title="Booru Browser"
               subtitle={Strings.SETTINGS_VERSION_LABEL(APP_VERSION)}
             />
+            <ListRow
+              title="Rate Booru Browser"
+              onPress={handleRate}
+              trailing={<IconSymbol name="star" color={c.textMuted} size={18} />}
+              accessibilityHint="Leave a review on the App Store"
+            />
+            <ListRow
+              title="Support"
+              onPress={openSupport}
+              trailing={<IconSymbol name="chevron.right" color={c.textMuted} size={18} />}
+              accessibilityHint="Email us for help"
+            />
+            <ListRow
+              title="Terms of Use"
+              onPress={() => openUrl(TERMS_URL)}
+              trailing={<IconSymbol name="chevron.right" color={c.textMuted} size={18} />}
+            />
           </Card>
         </Section>
 
         <Section title={Strings.SETTINGS_STORAGE_TITLE.toUpperCase()} color={c.textMuted}>
           <Card padding="lg" style={{ gap: Spacing.md }}>
             <Text style={{ color: c.text }} maxFontSizeMultiplier={1.6}>
-              {Strings.SETTINGS_IMAGE_CACHE_SIZE(formatBytes(cacheSizes.images))}
-            </Text>
-            <Text style={{ color: c.text }} maxFontSizeMultiplier={1.6}>
-              {Strings.SETTINGS_DOWNLOADS_SIZE(formatBytes(cacheSizes.downloads))}
+              {Strings.SETTINGS_DOWNLOADS_SIZE(formatBytes(downloadsSize))}
             </Text>
             <View style={{ flexDirection: 'row', gap: Spacing.sm, flexWrap: 'wrap' }}>
               <Button
@@ -185,7 +228,7 @@ export default function SettingsScreen() {
             label="Privacy Policy"
             variant="ghost"
             size="sm"
-            onPress={() => WebBrowser.openBrowserAsync(PRIVACY_URL).catch(() => {})}
+            onPress={() => openUrl(PRIVACY_URL)}
           />
         </Section>
         </WideContainer>
@@ -215,21 +258,6 @@ function Section({
       <View style={styles.sectionBody}>{children}</View>
     </View>
   );
-}
-
-function downloadsDir(): string | null {
-  return FileSystem.documentDirectory ? `${FileSystem.documentDirectory}downloads/` : null;
-}
-
-async function measureImageCache(): Promise<number> {
-  try {
-    const path = await ExpoImage.getCachePathAsync('').catch(() => null);
-    if (!path) return 0;
-    const dir = path.replace(/[^/]*$/, '');
-    return await measureDir(dir);
-  } catch {
-    return 0;
-  }
 }
 
 async function measureDownloads(): Promise<number> {
