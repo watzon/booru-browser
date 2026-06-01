@@ -29,8 +29,6 @@ export default function SettingsScreen() {
   const serverCount = useServerStore((s) => s.servers.length);
 
   const { unlocked, unlock, lock } = useGateStore();
-  const [tapCount, setTapCount] = useState(0);
-  const [showAdvanced, setShowAdvanced] = useState(false);
   const [cacheSizes, setCacheSizes] = useState<{ images: number; downloads: number }>({
     images: 0,
     downloads: 0,
@@ -50,15 +48,6 @@ export default function SettingsScreen() {
   useEffect(() => {
     refreshSizes();
   }, [refreshSizes]);
-
-  const onVersionTap = () => {
-    const next = tapCount + 1;
-    setTapCount(next);
-    if (next >= 7) {
-      setShowAdvanced(true);
-      setTapCount(0);
-    }
-  };
 
   const onToggleGate = (value: boolean) => {
     if (value && !unlocked) {
@@ -123,13 +112,31 @@ export default function SettingsScreen() {
           </Card>
         </Section>
 
+        <Section title="CONTENT" color={c.textMuted}>
+          <Card padding="lg">
+            <View style={styles.row}>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.rowTitle, { color: c.text }]} maxFontSizeMultiplier={1.6}>
+                  Mature content
+                </Text>
+                <Text style={[styles.rowSub, { color: c.textMuted }]} maxFontSizeMultiplier={1.6}>
+                  {unlocked ? Strings.SETTINGS_GATE_UNLOCKED : Strings.SETTINGS_GATE_LOCKED}
+                </Text>
+              </View>
+              <Switch
+                value={unlocked}
+                onValueChange={onToggleGate}
+                accessibilityLabel="Mature content"
+              />
+            </View>
+          </Card>
+        </Section>
+
         <Section title="ABOUT" color={c.textMuted}>
           <Card padding="none">
             <ListRow
               title="Booru Browser"
               subtitle={Strings.SETTINGS_VERSION_LABEL(APP_VERSION)}
-              onPress={onVersionTap}
-              accessibilityHint="Long-press for advanced settings"
             />
           </Card>
         </Section>
@@ -165,34 +172,6 @@ export default function SettingsScreen() {
             </View>
           </Card>
         </Section>
-
-        {showAdvanced || unlocked ? (
-          <Section title="ADVANCED" color={c.textMuted}>
-            <Card padding="lg">
-              <View style={styles.row}>
-                <View style={{ flex: 1 }}>
-                  <Text
-                    style={[styles.rowTitle, { color: c.text }]}
-                    maxFontSizeMultiplier={1.6}
-                  >
-                    Mature content
-                  </Text>
-                  <Text
-                    style={[styles.rowSub, { color: c.textMuted }]}
-                    maxFontSizeMultiplier={1.6}
-                  >
-                    {unlocked ? Strings.SETTINGS_GATE_UNLOCKED : Strings.SETTINGS_GATE_LOCKED}
-                  </Text>
-                </View>
-                <Switch
-                  value={unlocked}
-                  onValueChange={onToggleGate}
-                  accessibilityLabel="Mature content"
-                />
-              </View>
-            </Card>
-          </Section>
-        ) : null}
 
         <Section title="PRIVACY" color={c.textMuted}>
           <Text
