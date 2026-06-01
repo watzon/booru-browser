@@ -11,6 +11,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.watzon.boorubrowser",
+      "buildNumber": "1",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "UISupportedInterfaceOrientations": ["UIInterfaceOrientationPortrait"],
