@@ -59,7 +59,7 @@ export default function ScanScreen() {
       const out = importMany(result.servers, result.file.defaultServerId);
       const total = out.added + out.updated;
       toast.success(Strings.IMPORT_SUCCESS(total));
-      router.dismissTo('/(tabs)/servers');
+      router.dismissTo('/servers');
     } catch (e) {
       toast.error(`Scan failed: ${(e as Error).message}`);
       scanLock.current = false;

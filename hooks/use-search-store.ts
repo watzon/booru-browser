@@ -4,7 +4,10 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 
 export type SortOrder = 'newest' | 'score' | 'random';
 export type RatingFilter = 'all' | 'safe' | 'questionable' | 'explicit';
-export type GalleryLayout = 'grid' | 'card';
+export type GalleryLayout = 'grid' | 'masonry' | 'card';
+
+// Cycle order for the layout toggle: uniform grid → bento masonry → full card.
+const LAYOUT_CYCLE: GalleryLayout[] = ['grid', 'masonry', 'card'];
 
 type State = {
   tags: string[];
@@ -47,7 +50,10 @@ export const useSearchStore = create<State & Actions>()(
       resetFilters: () => set({ order: 'newest', ratingFilter: 'all' }),
       setLayout: (layout) => set({ layout }),
       toggleLayout: () =>
-        set((s) => ({ layout: s.layout === 'grid' ? 'card' : 'grid' })),
+        set((s) => {
+          const i = LAYOUT_CYCLE.indexOf(s.layout);
+          return { layout: LAYOUT_CYCLE[(i + 1) % LAYOUT_CYCLE.length] };
+        }),
     }),
     {
       name: 'booru-browser:search-store',

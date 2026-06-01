@@ -8,7 +8,15 @@ import { invalidateSource } from '@/sources/registry';
 type ServerStoreState = {
   servers: ServerConfig[];
   activeServerId: string | null;
+  /** Server ids in most-recently-used order (index 0 = most recent). Drives the
+   *  ordering of the hold-to-switch menu so frequent boorus stay in thumb reach. */
+  recentServerIds: string[];
 };
+
+/** Move `id` to the front of the MRU list (deduped). */
+function bumpRecent(list: string[], id: string): string[] {
+  return [id, ...list.filter((x) => x !== id)];
+}
 
 type ServerStoreActions = {
   addServer: (server: ServerConfig) => void;
@@ -25,6 +33,7 @@ export const useServerStore = create<ServerStore>()(
     (set, get) => ({
       servers: [],
       activeServerId: null,
+      recentServerIds: [],
       addServer: (server) =>
         set((state) => {
           const existing = state.servers.findIndex((s) => s.id === server.id);
@@ -32,9 +41,11 @@ export const useServerStore = create<ServerStore>()(
           if (existing >= 0) next[existing] = server;
           else next.push(server);
           invalidateSource(server.id);
+          const activeServerId = state.activeServerId ?? server.id;
           return {
             servers: next,
-            activeServerId: state.activeServerId ?? server.id,
+            activeServerId,
+            recentServerIds: bumpRecent(state.recentServerIds, activeServerId),
           };
         }),
       updateServer: (id, patch) =>
@@ -47,13 +58,17 @@ export const useServerStore = create<ServerStore>()(
         set((state) => {
           invalidateSource(id);
           const next = state.servers.filter((s) => s.id !== id);
-          return {
-            servers: next,
-            activeServerId:
-              state.activeServerId === id ? (next[0]?.id ?? null) : state.activeServerId,
-          };
+          const activeServerId =
+            state.activeServerId === id ? (next[0]?.id ?? null) : state.activeServerId;
+          let recentServerIds = state.recentServerIds.filter((x) => x !== id);
+          if (activeServerId) recentServerIds = bumpRecent(recentServerIds, activeServerId);
+          return { servers: next, activeServerId, recentServerIds };
         }),
-      setActiveServer: (id) => set({ activeServerId: id }),
+      setActiveServer: (id) =>
+        set((state) => ({
+          activeServerId: id,
+          recentServerIds: id ? bumpRecent(state.recentServerIds, id) : state.recentServerIds,
+        })),
       importMany: (incoming, defaultId) => {
         let added = 0;
         let updated = 0;
@@ -66,12 +81,16 @@ export const useServerStore = create<ServerStore>()(
             invalidateSource(s.id);
           }
           const servers = Array.from(map.values());
+          const activeServerId =
+            defaultId && servers.some((s) => s.id === defaultId)
+              ? defaultId
+              : (state.activeServerId ?? servers[0]?.id ?? null);
           return {
             servers,
-            activeServerId:
-              defaultId && servers.some((s) => s.id === defaultId)
-                ? defaultId
-                : (state.activeServerId ?? servers[0]?.id ?? null),
+            activeServerId,
+            recentServerIds: activeServerId
+              ? bumpRecent(state.recentServerIds, activeServerId)
+              : state.recentServerIds,
           };
         });
         return { added, updated };
@@ -83,6 +102,7 @@ export const useServerStore = create<ServerStore>()(
       partialize: (state) => ({
         servers: state.servers.map(({ auth: _auth, ...rest }) => rest),
         activeServerId: state.activeServerId,
+        recentServerIds: state.recentServerIds,
       }),
     },
   ),

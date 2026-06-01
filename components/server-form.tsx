@@ -30,6 +30,7 @@ import {
   AUTH_LABEL,
   supportedAuthKinds,
 } from '@/sources/auth-capabilities';
+import { WideContainer } from '@/components/ui/wide-container';
 import { SOURCE_KINDS } from '@/sources/registry';
 import type { AuthConfig, AuthKind, ServerConfig, SourceKind } from '@/sources/types';
 
@@ -184,9 +185,10 @@ export function ServerForm({ initialId, onSaved }: ServerFormProps) {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
     >
       <ScrollView
-        contentContainerStyle={{ padding: Spacing.lg, gap: Spacing.lg, paddingBottom: Spacing.xxxl * 2 }}
+        contentContainerStyle={{ padding: Spacing.lg, paddingBottom: Spacing.xxxl * 2 }}
         keyboardShouldPersistTaps="handled"
       >
+        <WideContainer style={{ gap: Spacing.lg }}>
         <Input
           label="NAME"
           value={name}
@@ -398,6 +400,7 @@ export function ServerForm({ initialId, onSaved }: ServerFormProps) {
           fullWidth
           size="lg"
         />
+        </WideContainer>
       </ScrollView>
     </KeyboardAvoidingView>
   );

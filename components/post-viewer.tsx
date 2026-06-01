@@ -5,17 +5,18 @@ import { useCallback, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   type GestureResponderEvent,
+  type LayoutChangeEvent,
   Pressable,
   StyleSheet,
   Text,
   View,
-  useWindowDimensions,
 } from 'react-native';
 
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   runOnJS,
+  useAnimatedReaction,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -30,10 +31,24 @@ type Props = {
   onTap?: () => void;
   headers?: Record<string, string>;
   chromeVisible?: boolean;
+  /**
+   * When provided, a zoom gesture (pinch or double-tap) doesn't zoom the image
+   * in place — it fires this callback on release so the caller can escalate to a
+   * full-screen view. Used by the iPad split pane, where in-place zoom inside the
+   * cramped detail column is more frustrating than useful.
+   */
+  onZoom?: () => void;
+  /** Fired when the image zoom crosses in/out of 1× — lets the parent disable a
+   *  swipe-to-dismiss gesture while the image is zoomed (so panning the zoomed
+   *  image doesn't dismiss the page). */
+  onZoomChange?: (zoomed: boolean) => void;
 };
 
 const MAX_SCALE = 5;
 const MIN_SCALE = 1;
+// Escalating (split-pane) mode: the release scale past which we treat the pinch
+// as a deliberate "open full screen" intent rather than an accidental brush.
+const ZOOM_INTENT_SCALE = 1.05;
 const VIDEO_EXTS = new Set(['mp4', 'webm', 'm4v', 'mov']);
 
 // The viewer is intentionally a dark-mode surface regardless of system theme —
@@ -74,8 +89,25 @@ export function PostViewer(props: Props) {
   return <ImagePostViewer {...props} />;
 }
 
-function ImagePostViewer({ post, onTap, headers }: Props) {
-  const { width, height } = useWindowDimensions();
+function ImagePostViewer({ post, onTap, headers, onZoom, onZoomChange }: Props) {
+  // Size to the actual container, not the window, so the image stays inside its
+  // pane in the iPad split layout (window-sized would overflow onto the grid and
+  // swallow its taps).
+  const [size, setSize] = useState({ width: 0, height: 0 });
+  // Mirror of "is the image zoomed in" — gates the in-place pan (so it only
+  // claims touches when zoomed) and is reported up to disable swipe-to-dismiss.
+  const [zoomed, setZoomed] = useState(false);
+  const notifyZoom = useCallback(
+    (z: boolean) => {
+      setZoomed(z);
+      onZoomChange?.(z);
+    },
+    [onZoomChange],
+  );
+  const onLayout = useCallback((e: LayoutChangeEvent) => {
+    const { width, height } = e.nativeEvent.layout;
+    setSize((p) => (p.width === width && p.height === height ? p : { width, height }));
+  }, []);
   const reduce = useReduceMotion();
   const animDuration = reduce ? 0 : 200;
 
@@ -86,6 +118,14 @@ function ImagePostViewer({ post, onTap, headers }: Props) {
   const savedTranslateX = useSharedValue(0);
   const savedTranslateY = useSharedValue(0);
 
+  // Report zoom in/out so the parent can toggle swipe-to-dismiss + the pan gate.
+  useAnimatedReaction(
+    () => scale.value > 1.01,
+    (z, prev) => {
+      if (z !== prev) runOnJS(notifyZoom)(z);
+    },
+  );
+
   const reset = useCallback(() => {
     scale.value = withTiming(1, { duration: animDuration });
     savedScale.value = 1;
@@ -95,12 +135,37 @@ function ImagePostViewer({ post, onTap, headers }: Props) {
     savedTranslateY.value = 0;
   }, [animDuration, scale, savedScale, translateX, translateY, savedTranslateX, savedTranslateY]);
 
+  // Escalation can be signalled more than once for a single interaction (a pinch
+  // and its trailing tap, repeated worklet end callbacks). Collapse those into a
+  // single navigation so we don't push the full-screen route twice.
+  const lastZoomRef = useRef(0);
+  const triggerZoom = useCallback(() => {
+    if (!onZoom) return;
+    const now = Date.now();
+    if (now - lastZoomRef.current < 800) return;
+    lastZoomRef.current = now;
+    onZoom();
+  }, [onZoom]);
+
   const pinch = Gesture.Pinch()
     .onUpdate((e) => {
       const next = savedScale.value * e.scale;
       scale.value = Math.min(MAX_SCALE, Math.max(MIN_SCALE * 0.9, next));
     })
     .onEnd(() => {
+      // In escalating mode the pinch zooms normally right up until release; if the
+      // user ended zoomed in, hand off to the full-screen view and reset the pane.
+      if (onZoom) {
+        const zoomedIn = scale.value > ZOOM_INTENT_SCALE;
+        scale.value = withTiming(1, { duration: animDuration });
+        savedScale.value = 1;
+        translateX.value = withTiming(0, { duration: animDuration });
+        translateY.value = withTiming(0, { duration: animDuration });
+        savedTranslateX.value = 0;
+        savedTranslateY.value = 0;
+        if (zoomedIn) runOnJS(triggerZoom)();
+        return;
+      }
       if (scale.value < 1) {
         scale.value = withTiming(1, { duration: animDuration });
         savedScale.value = 1;
@@ -114,6 +179,9 @@ function ImagePostViewer({ post, onTap, headers }: Props) {
     });
 
   const pan = Gesture.Pan()
+    // Only claim touches while zoomed in — otherwise it would swallow a parent
+    // swipe-to-dismiss. (The scale guard below is a belt-and-suspenders check.)
+    .enabled(zoomed)
     .averageTouches(true)
     .onUpdate((e) => {
       if (scale.value <= 1) return;
@@ -128,6 +196,10 @@ function ImagePostViewer({ post, onTap, headers }: Props) {
   const doubleTap = Gesture.Tap()
     .numberOfTaps(2)
     .onEnd(() => {
+      if (onZoom) {
+        runOnJS(triggerZoom)();
+        return;
+      }
       if (scale.value > 1) {
         runOnJS(reset)();
       } else {
@@ -143,6 +215,9 @@ function ImagePostViewer({ post, onTap, headers }: Props) {
     })
     .requireExternalGestureToFail(doubleTap);
 
+  // Same composition in both modes: the pinch zooms normally during the gesture
+  // (pan included, just like the full-screen viewer); escalating mode only differs
+  // in what happens on release.
   const composed = Gesture.Simultaneous(pinch, pan, Gesture.Exclusive(doubleTap, singleTap));
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -157,20 +232,27 @@ function ImagePostViewer({ post, onTap, headers }: Props) {
     <GestureDetector gesture={composed}>
       <Animated.View
         style={[StyleSheet.absoluteFill, styles.container]}
+        onLayout={onLayout}
         accessible
         accessibilityRole="image"
         accessibilityLabel={postA11yLabel(post)}
-        accessibilityHint="Pinch to zoom, double-tap to reset, single-tap to toggle controls"
+        accessibilityHint={
+          onZoom
+            ? 'Pinch or double-tap to open full screen, single-tap to toggle controls'
+            : 'Pinch to zoom, double-tap to reset, single-tap to toggle controls'
+        }
       >
         <Animated.View style={[styles.imageWrap, animatedStyle]}>
-          <Image
-            source={{ uri: post.sampleUrl, headers }}
-            style={{ width, height }}
-            contentFit="contain"
-            transition={150}
-            placeholder={post.previewUrl ? { uri: post.previewUrl, headers } : undefined}
-            accessibilityIgnoresInvertColors
-          />
+          {size.width > 0 ? (
+            <Image
+              source={{ uri: post.sampleUrl, headers }}
+              style={{ width: size.width, height: size.height }}
+              contentFit="contain"
+              transition={150}
+              placeholder={post.previewUrl ? { uri: post.previewUrl, headers } : undefined}
+              accessibilityIgnoresInvertColors
+            />
+          ) : null}
         </Animated.View>
       </Animated.View>
     </GestureDetector>
@@ -178,7 +260,12 @@ function ImagePostViewer({ post, onTap, headers }: Props) {
 }
 
 function VideoPostViewer({ post, headers, onTap, chromeVisible }: Props) {
-  const { width } = useWindowDimensions();
+  // Measure the container (pane) width rather than the window — see ImagePostViewer.
+  const [width, setWidth] = useState(0);
+  const onLayout = useCallback((e: LayoutChangeEvent) => {
+    const w = e.nativeEvent.layout.width;
+    setWidth((prev) => (prev === w ? prev : w));
+  }, []);
 
   const player = useVideoPlayer(
     headers
@@ -254,12 +341,13 @@ function VideoPostViewer({ post, headers, onTap, chromeVisible }: Props) {
   return (
     <Pressable
       onPress={onTap}
+      onLayout={onLayout}
       style={[StyleSheet.absoluteFill, styles.container]}
       accessibilityRole="button"
       accessibilityLabel={`Video, ${postA11yLabel(post)}`}
       accessibilityHint="Single-tap to toggle controls"
     >
-      {isLoading && post.previewUrl ? (
+      {isLoading && post.previewUrl && width > 0 ? (
         <Image
           source={{ uri: post.previewUrl, headers }}
           style={{

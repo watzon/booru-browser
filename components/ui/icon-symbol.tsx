@@ -44,6 +44,8 @@ const MAPPING = {
   'trash': 'delete',
   'video.fill': 'videocam',
   'square.grid.2x2': 'grid-view',
+  'square.grid.2x2.fill': 'grid-view',
+  'rectangle.3.group': 'view-quilt',
   'rectangle.portrait': 'crop-portrait',
 } as IconMapping;
 

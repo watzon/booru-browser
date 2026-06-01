@@ -1,47 +1,72 @@
 import { Platform, type ViewStyle } from 'react-native';
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#4ea8ff';
+// Brand palette is lifted straight from the app icon: a bento of anime art
+// under a magnifying glass — hot-pink/magenta hair, electric violet, cyan, a
+// kitsune gold, all on deep navy. Magenta is the primary accent.
+const tintColorLight = '#D81B82'; // magenta
+const tintColorDark = '#FF5FB0'; // hot pink
 
 export const Colors = {
   light: {
-    text: '#11181C',
-    textMuted: '#5a6066',
-    background: '#fff',
-    surface: '#f6f7f8',
-    surfaceMuted: '#eceef0',
-    border: '#d8dbde',
+    text: '#1C1420',
+    textMuted: '#6A6270',
+    background: '#FFFFFF',
+    surface: '#FAF5F8',
+    surfaceMuted: '#F0E8EE',
+    border: '#E4D9E1',
     tint: tintColorLight,
     accent: tintColorLight,
-    accentText: '#ffffff',
-    danger: '#cc3344',
-    dangerText: '#ffffff',
-    success: '#2e8a52',
-    warning: '#b06b00',
-    overlay: 'rgba(0,0,0,0.55)',
-    icon: '#687076',
-    tabIconDefault: '#687076',
+    accentText: '#FFFFFF',
+    danger: '#E2384C',
+    dangerText: '#FFFFFF',
+    success: '#2E8A52',
+    warning: '#C07A00',
+    overlay: 'rgba(20,8,18,0.55)',
+    icon: '#7A7280',
+    tabIconDefault: '#7A7280',
     tabIconSelected: tintColorLight,
+    // Brand accents (the icon's character palette)
+    brandPink: '#FF4FA3',
+    brandViolet: '#7C4DFF',
+    brandCyan: '#2BB6E0',
+    brandGold: '#F5A623',
+    brandDeep: '#010C2E',
+    gradientStart: '#FF4FA3',
+    gradientEnd: '#7C4DFF',
   },
   dark: {
-    text: '#ECEDEE',
-    textMuted: '#9BA1A6',
-    background: '#151718',
-    surface: '#1f2123',
-    surfaceMuted: '#2a2d30',
-    border: '#3a3e42',
+    text: '#F2ECF2',
+    textMuted: '#A39BAA',
+    background: '#141019',
+    surface: '#1E1826',
+    surfaceMuted: '#2A2235',
+    border: '#3A3145',
     tint: tintColorDark,
     accent: tintColorDark,
-    accentText: '#0b1822',
-    danger: '#ff5e6a',
-    dangerText: '#1a0608',
-    success: '#5dd28a',
-    warning: '#ffb84d',
+    accentText: '#2A0716',
+    danger: '#FF5E6A',
+    dangerText: '#1A0608',
+    success: '#5DD28A',
+    warning: '#FFB84D',
     overlay: 'rgba(0,0,0,0.7)',
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
+    icon: '#A39BAA',
+    tabIconDefault: '#A39BAA',
     tabIconSelected: tintColorDark,
+    // Brand accents (the icon's character palette)
+    brandPink: '#FF5FB0',
+    brandViolet: '#9B6BFF',
+    brandCyan: '#3FC9FF',
+    brandGold: '#FFB23E',
+    brandDeep: '#010C2E',
+    gradientStart: '#FF5FB0',
+    gradientEnd: '#9B6BFF',
   },
+};
+
+/** The signature pink→violet brand gradient, for hero surfaces and the FAB. */
+export const BrandGradient = {
+  light: ['#FF4FA3', '#7C4DFF'] as const,
+  dark: ['#FF5FB0', '#9B6BFF'] as const,
 };
 
 export type ThemeName = keyof typeof Colors;
@@ -111,23 +136,32 @@ export const Shadows: Record<'sm' | 'md' | 'lg', ViewStyle> = {
 
 export const HitSlop = { top: 8, right: 8, bottom: 8, left: 8 } as const;
 
+// Baloo 2 (loaded in app/_layout.tsx) is the playful, rounded display face used
+// for the wordmark and headings. Body copy stays on the system font. The
+// `display`/`displaySemibold` family names match the @expo-google-fonts keys.
 export const Fonts = Platform.select({
   ios: {
     sans: 'system-ui',
     serif: 'ui-serif',
     rounded: 'ui-rounded',
     mono: 'ui-monospace',
+    display: 'Baloo2_700Bold',
+    displaySemibold: 'Baloo2_600SemiBold',
   },
   default: {
     sans: 'normal',
     serif: 'serif',
     rounded: 'normal',
     mono: 'monospace',
+    display: 'Baloo2_700Bold',
+    displaySemibold: 'Baloo2_600SemiBold',
   },
   web: {
     sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
     serif: "Georgia, 'Times New Roman', serif",
     rounded: "'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif",
     mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+    display: "'Baloo2_700Bold', 'SF Pro Rounded', system-ui, sans-serif",
+    displaySemibold: "'Baloo2_600SemiBold', 'SF Pro Rounded', system-ui, sans-serif",
   },
-});
+})!;

@@ -19,23 +19,23 @@ export const Strings = {
   ACTION_CLEAR: 'Clear',
 
   // Servers
-  SERVERS_EMPTY_TITLE: 'No servers yet',
-  SERVERS_EMPTY_BODY: 'Add a booru server or import a shared server list to get started.',
+  SERVERS_EMPTY_TITLE: 'Let’s add your first board',
+  SERVERS_EMPTY_BODY: 'Connect a booru or import a shared list, and your gallery comes to life.',
   SERVERS_DELETE_TITLE: 'Delete server?',
   SERVERS_DELETE_BODY: 'This removes the server and any saved credentials. Your favorites are kept but their source will show as removed.',
   SERVERS_SAVED: 'Server saved',
 
   // Favorites
-  FAVORITES_EMPTY_TITLE: 'No favorites yet',
-  FAVORITES_EMPTY_BODY: 'Tap the star on a post to save it here.',
+  FAVORITES_EMPTY_TITLE: 'Nothing starred yet',
+  FAVORITES_EMPTY_BODY: 'Tap the star on any post and it’ll live here, ready whenever you are.',
   FAVORITES_ORPHAN_BADGE: 'Source server removed',
   FAVORITES_PRUNED: (n: number) => `Removed ${n} orphaned ${n === 1 ? 'favorite' : 'favorites'}`,
 
   // Browse / search
-  BROWSE_EMPTY_NO_ACTIVE_SERVER_TITLE: 'No active server',
-  BROWSE_EMPTY_NO_ACTIVE_SERVER_BODY: 'Pick a server from the Servers tab.',
-  BROWSE_EMPTY_NO_POSTS_TITLE: 'No posts found',
-  BROWSE_EMPTY_NO_POSTS_BODY: 'Try different tags or a different sort.',
+  BROWSE_EMPTY_NO_ACTIVE_SERVER_TITLE: 'Pick a board to browse',
+  BROWSE_EMPTY_NO_ACTIVE_SERVER_BODY: 'Choose one of your servers and we’ll start pulling posts.',
+  BROWSE_EMPTY_NO_POSTS_TITLE: 'Nothing here… yet',
+  BROWSE_EMPTY_NO_POSTS_BODY: 'Try different tags or a different sort — there’s plenty out there.',
   BROWSE_OFFLINE: "You're offline — showing cached results.",
   BROWSE_VERIFICATION_REQUIRED: 'This site needs a browser challenge before we can fetch posts.',
 
@@ -67,6 +67,18 @@ export const Strings = {
   ERROR_GENERIC_BODY: 'Pull to try again, or report this if it keeps happening.',
   ERROR_NETWORK: 'Network error — check your connection.',
   ERROR_OFFLINE: "You're offline",
+
+  // Onboarding
+  ONBOARDING_SKIP: 'Skip',
+  ONBOARDING_NEXT: 'Next',
+  ONBOARDING_WELCOME_TITLE: 'Welcome to Booru',
+  ONBOARDING_WELCOME_BODY: 'A fast, friendly home for every booru you love — all in one beautiful place.',
+  ONBOARDING_SOURCES_TITLE: 'Every board, your way',
+  ONBOARDING_SOURCES_BODY: 'Add Danbooru, Gelbooru, e621, Kemono and more. Search tags, save favorites, download with a tap.',
+  ONBOARDING_PRIVATE_TITLE: 'Private by design',
+  ONBOARDING_PRIVATE_BODY: 'No accounts, no tracking. Your servers and keys stay on your device — mature content stays locked until you say so.',
+  ONBOARDING_GET_STARTED: 'Add your first board',
+  ONBOARDING_IMPORT: 'Import a list',
 
   // Toasts
   TOAST_COPIED: 'Copied to clipboard',

@@ -1,24 +1,32 @@
 import Constants from 'expo-constants';
 import { Image as ExpoImage } from 'expo-image';
 import * as FileSystem from 'expo-file-system/legacy';
+import { useRouter } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { IconSymbol } from '@/components/ui/icon-symbol';
 import { ListRow } from '@/components/ui/list-row';
 import { useToast } from '@/components/ui/toast';
+import { WideContainer } from '@/components/ui/wide-container';
 import { FontSize, Spacing } from '@/constants/theme';
 import { Strings } from '@/constants/strings';
 import { useGateStore } from '@/gate/store';
 import { useThemeColors } from '@/hooks/use-theme-color';
+import { useServerStore } from '@/servers/store';
 
 const APP_VERSION = Constants.expoConfig?.version ?? '1.0.0';
+const PRIVACY_URL = 'https://watzon.tech/booru-browser';
 
 export default function SettingsScreen() {
   const c = useThemeColors();
   const toast = useToast();
+  const router = useRouter();
+  const serverCount = useServerStore((s) => s.servers.length);
 
   const { unlocked, unlock, lock } = useGateStore();
   const [tapCount, setTapCount] = useState(0);
@@ -91,7 +99,8 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1 }} edges={['top']}>
-      <ScrollView contentContainerStyle={{ padding: Spacing.lg, gap: Spacing.xxl }}>
+      <ScrollView contentContainerStyle={{ padding: Spacing.lg, paddingBottom: 130 }}>
+        <WideContainer style={{ gap: Spacing.xxl }}>
         <View>
           <Text
             style={[styles.h1, { color: c.text }]}
@@ -101,6 +110,18 @@ export default function SettingsScreen() {
             {Strings.SETTINGS_TITLE}
           </Text>
         </View>
+
+        <Section title="BOORUS" color={c.textMuted}>
+          <Card padding="none">
+            <ListRow
+              title="Manage servers"
+              subtitle={`${serverCount} ${serverCount === 1 ? 'booru' : 'boorus'} configured`}
+              onPress={() => router.push('/servers')}
+              trailing={<IconSymbol name="chevron.right" color={c.textMuted} size={18} />}
+              accessibilityHint="Add, edit, import, or remove boorus"
+            />
+          </Card>
+        </Section>
 
         <Section title="ABOUT" color={c.textMuted}>
           <Card padding="none">
@@ -181,7 +202,14 @@ export default function SettingsScreen() {
             Booru Browser does not ship a default server list. Servers are stored only on this
             device. API keys are stored in iOS Keychain. No analytics, no tracking.
           </Text>
+          <Button
+            label="Privacy Policy"
+            variant="ghost"
+            size="sm"
+            onPress={() => WebBrowser.openBrowserAsync(PRIVACY_URL).catch(() => {})}
+          />
         </Section>
+        </WideContainer>
       </ScrollView>
     </SafeAreaView>
   );

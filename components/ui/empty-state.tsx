@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { FontSize, Spacing } from '@/constants/theme';
+import { Fonts, FontSize, Spacing } from '@/constants/theme';
 import { useThemeColors } from '@/hooks/use-theme-color';
 
 type Props = {
@@ -42,8 +42,8 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   title: {
-    fontSize: FontSize.lg,
-    fontWeight: '600',
+    fontFamily: Fonts.display,
+    fontSize: FontSize.xl,
     textAlign: 'center',
   },
   body: {

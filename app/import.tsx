@@ -59,7 +59,7 @@ export default function ImportScreen() {
     const total = result.added + result.updated;
     toast.success(Strings.IMPORT_SUCCESS(total));
     // Navigate to Servers tab so user sees what they just imported.
-    router.dismissTo('/(tabs)/servers');
+    router.dismissTo('/servers');
   };
 
   return (
