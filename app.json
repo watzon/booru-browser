@@ -10,7 +10,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.watzon.boorubrowser",
+      "bundleIdentifier": "tech.watzon.boorubrowser",
       "buildNumber": "2",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
@@ -24,7 +24,7 @@
       }
     },
     "android": {
-      "package": "com.watzon.boorubrowser",
+      "package": "tech.watzon.boorubrowser",
       "adaptiveIcon": {
         "backgroundColor": "#010C2E",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
