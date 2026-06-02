@@ -7,6 +7,10 @@ import { FontSize, Radius, Shadows, Spacing } from '@/constants/theme';
 import { useReduceMotion } from '@/hooks/use-reduce-motion';
 import { useThemeColors } from '@/hooks/use-theme-color';
 
+// Height of the floating nav pill (components/nav-overlay.tsx). Toasts sit
+// above it so they're never hidden behind the bar on the main tab screens.
+const NAV_BAR_HEIGHT = 60;
+
 type ToastKind = 'info' | 'success' | 'error' | 'warning';
 type ToastItem = { id: number; message: string; kind: ToastKind; duration: number };
 
@@ -69,7 +73,16 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 function ToastHost({ items }: { items: ToastItem[] }) {
   const insets = useSafeAreaInsets();
   return (
-    <View pointerEvents="box-none" style={[styles.host, { bottom: insets.bottom + Spacing.lg }]}>
+    <View
+      pointerEvents="box-none"
+      style={[
+        styles.host,
+        // Clear the floating nav bar: it's anchored at
+        // max(insets.bottom, Spacing.sm) + Spacing.sm with a 60pt pill. On
+        // screens without the nav this just floats slightly higher, which is fine.
+        { bottom: Math.max(insets.bottom, Spacing.sm) + Spacing.sm + NAV_BAR_HEIGHT + Spacing.md },
+      ]}
+    >
       {items.map((t) => (
         <ToastBubble key={t.id} item={t} />
       ))}
