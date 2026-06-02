@@ -1,10 +1,12 @@
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Linking, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
+import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useToast } from '@/components/ui/toast';
 import { Colors, FontSize, Radius, Spacing } from '@/constants/theme';
 import { Strings } from '@/constants/strings';
@@ -23,24 +25,36 @@ export default function ScanScreen() {
   const importMany = useServerStore((s) => s.importMany);
 
   if (!permission) {
-    return <View style={styles.center} />;
+    return <View style={[styles.screen, { backgroundColor: c.background }]} />;
   }
 
   if (!permission.granted) {
+    // Once the user has denied at the OS level, requestPermission() can't
+    // re-prompt — send them to Settings instead.
+    const canAsk = permission.canAskAgain;
     return (
-      <SafeAreaView style={styles.center}>
-        <Text
-          style={[styles.title, { color: c.text }]}
-          accessibilityRole="header"
-          maxFontSizeMultiplier={1.6}
-        >
-          Camera access needed
-        </Text>
-        <Text style={[styles.body, { color: c.textMuted }]} maxFontSizeMultiplier={1.6}>
-          Booru Browser uses the camera to scan QR codes for server list imports.
-        </Text>
-        <Button label="Allow camera" onPress={requestPermission} />
-      </SafeAreaView>
+      <View style={[styles.screen, { backgroundColor: c.background }]}>
+        <SafeAreaView style={styles.screen}>
+          <EmptyState
+            icon={<IconSymbol name="qrcode.viewfinder" color={c.accent} size={56} />}
+            title="Camera access needed"
+            body={
+              canAsk
+                ? 'Booru Browser uses the camera to scan QR codes for importing server lists.'
+                : 'Camera access is turned off. Enable it in Settings to scan QR codes.'
+            }
+            action={
+              <View style={styles.actions}>
+                <Button
+                  label={canAsk ? 'Allow camera' : 'Open Settings'}
+                  onPress={canAsk ? requestPermission : () => Linking.openSettings()}
+                />
+                <Button label="Cancel" variant="secondary" onPress={() => router.back()} />
+              </View>
+            }
+          />
+        </SafeAreaView>
+      </View>
     );
   }
 
@@ -92,9 +106,8 @@ export default function ScanScreen() {
 }
 
 const styles = StyleSheet.create({
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: Spacing.xxl, gap: Spacing.md },
-  title: { fontSize: FontSize.lg, fontWeight: '700' },
-  body: { fontSize: FontSize.sm, textAlign: 'center', maxWidth: 320 },
+  screen: { flex: 1 },
+  actions: { flexDirection: 'row', gap: Spacing.md, flexWrap: 'wrap', justifyContent: 'center' },
   overlay: { flex: 1, alignItems: 'center', justifyContent: 'flex-end', padding: Spacing.xxl },
   overlayPill: {
     backgroundColor: 'rgba(0,0,0,0.75)',
