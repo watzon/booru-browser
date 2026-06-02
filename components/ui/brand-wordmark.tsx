@@ -23,7 +23,7 @@ export function BrandWordmark({ size = 28, sparkle = true }: Props) {
           letterSpacing: 0.2,
         }}
       >
-        Booru
+        Booru Browser
       </GradientText>
       {sparkle ? <Sparkle size={size * 0.5} style={{ marginLeft: 2, marginTop: -size * 0.32 }} /> : null}
     </View>

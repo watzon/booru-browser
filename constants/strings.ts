@@ -71,7 +71,7 @@ export const Strings = {
   // Onboarding
   ONBOARDING_SKIP: 'Skip',
   ONBOARDING_NEXT: 'Next',
-  ONBOARDING_WELCOME_TITLE: 'Welcome to Booru',
+  ONBOARDING_WELCOME_TITLE: 'Welcome to Booru Browser',
   ONBOARDING_WELCOME_BODY: 'A fast, friendly home for every booru you love — all in one beautiful place.',
   ONBOARDING_SOURCES_TITLE: 'Every board, your way',
   ONBOARDING_SOURCES_BODY: 'Add Danbooru, Gelbooru, e621, Kemono and more. Search tags, save favorites, download with a tap.',

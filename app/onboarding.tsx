@@ -273,7 +273,10 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.display,
     fontSize: FontSize.xxxl,
     textAlign: 'center',
-    lineHeight: FontSize.xxxl * 1.08,
+    // Baloo 2 sits high in its em box; a near-1.0 line height clips the
+    // ascenders. Give it headroom so the top of the glyphs isn't cut off.
+    lineHeight: FontSize.xxxl * 1.3,
+    includeFontPadding: false,
   },
   body: {
     fontSize: FontSize.md,
