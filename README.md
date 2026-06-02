@@ -62,4 +62,4 @@ The age gate is structural, not advisory: every `Source.search` call passes thro
 
 ## License
 
-Source-available under the [PolyForm Noncommercial License 1.0.0](LICENSE) — you may use, modify, and share the code for **noncommercial** purposes, but it may **not** be redistributed or used for commercial / financial gain. Copyright © 2026 Watzon Ventures, LLC.
+Licensed under the [Apache License 2.0](LICENSE). Copyright © 2026 Watzon Ventures, LLC.
